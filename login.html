@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0b0d;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-x: hidden;
+            align-items: center;
+            justify-content: center;
+        }
+        .card {
+            width: 100%;
+            max-width: 380px;
+            background: rgba(20,20,24,0.7);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 40px 36px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        .error-message {
+            display: none;
+            padding: 12px 16px;
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.3);
+            border-radius: 8px;
+            color: #fca5a5;
+            margin-bottom: 20px;
+            font-size: 13px;
+            animation: shake 0.4s ease-in-out;
+        }
+        .error-message.show { display: block; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+        .form-group { margin-bottom: 20px; }
+        .form-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: rgba(255,255,255,0.4);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+        .input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            transition: border-color .2s, background .2s;
+        }
+        .input-wrap:focus-within {
+            border-color: rgba(124,108,255,0.5);
+            background: rgba(255,255,255,0.05);
+        }
+        .input-icon {
+            padding-left: 14px;
+            color: rgba(255,255,255,0.25);
+            display: flex;
+            align-items: center;
+        }
+        .input-icon svg { width: 18px; height: 18px; }
+        .form-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 14px 14px 14px 10px;
+            font-size: 14px;
+            color: #ffffff;
+            outline: none;
+            font-family: inherit;
+        }
+        .form-input::placeholder { color: rgba(255,255,255,0.2); }
+        .turnstile-wrap { margin-bottom: 16px; }
+        .login-btn {
+            width: 100%;
+            padding: 16px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #ffffff;
+            background: linear-gradient(135deg, #6c5ce7 0%, #7c6cff 50%, #8b7cff 100%);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform .2s, box-shadow .2s;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 20px rgba(124,108,255,0.3);
+            position: relative;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .login-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+            opacity: 0;
+            transition: opacity .3s;
+        }
+        .login-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(124,108,255,0.45); }
+        .login-btn:hover::before { opacity: 1; }
+        .login-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .login-btn svg { width: 16px; height: 16px; }
+        .back-link { margin-top: 28px; text-align: center; }
+        .back-link a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255,255,255,0.5);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color .2s;
+        }
+        .back-link a:hover { color: rgba(255,255,255,0.8); }
+        .back-link svg { width: 16px; height: 16px; }
+        .loading { position: relative; pointer-events: none; color: transparent !important; }
+        .loading svg { visibility: hidden; }
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 22px;
+            height: 22px;
+            margin-left: -11px;
+            margin-top: -11px;
+            border: 3px solid rgba(255,255,255,0.2);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @media (max-width: 600px) { .card { padding: 28px 24px; margin: 16px; } }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="error-message" id="errorMessage">Unauthorized.</div>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="pw" class="form-label">Password</label>
+                <div class="input-wrap">
+                    <span class="input-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    </span>
+                    <input type="password" id="pw" name="pw" class="form-input" placeholder="Enter your password..." autocomplete="off" required>
+                </div>
+            </div>
+            <div class="turnstile-wrap" id="turnstile-container"></div>
+            <button type="submit" class="login-btn" id="loginBtn">
+                Login
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+        </form>
+        <div class="back-link">
+            <a href="/">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg>
+                Back to Home
+            </a>
+        </div>
+    </div>
+    <script>
+        var turnstileWidgetId = null;
+        var turnstileSiteKey = '';
+        var turnstileToken = '';  // NEW: Store token from callback
+
+        async function initTurnstile() {
+            try {
+                var res = await fetch('/api/public-config');
+                var data = await res.json();
+                turnstileSiteKey = data.turnstileSiteKey || '';
+            } catch(e) {}
+            if (!turnstileSiteKey || turnstileSiteKey === 'YOUR_TURNSTILE_SITE_KEY') return;
+            function renderWidget() {
+                if (window.turnstile && document.getElementById('turnstile-container')) {
+                    turnstileWidgetId = turnstile.render('#turnstile-container', {
+                        sitekey: turnstileSiteKey,
+                        theme: 'dark',
+                        callback: function(token) {
+                            turnstileToken = token;  // NEW: Capture token when ready
+                        },
+                        'expired-callback': function() {
+                            turnstileToken = '';  // NEW: Clear token on expiry
+                        },
+                        'error-callback': function() {
+                            turnstileToken = '';  // NEW: Clear token on error
+                        }
+                    });
+                } else {
+                    setTimeout(renderWidget, 100);
+                }
+            }
+            renderWidget();
+        }
+
+        const loginForm = document.getElementById('loginForm');
+        const pwInput = document.getElementById('pw');
+        const loginBtn = document.getElementById('loginBtn');
+        const errorMessage = document.getElementById('errorMessage');
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const pw = pwInput.value.trim();
+            if (!pw) { showError('Please enter your password'); return; }
+            var cfTurnstileToken = '';
+            if (turnstileSiteKey && turnstileSiteKey !== 'YOUR_TURNSTILE_SITE_KEY') {
+                // CHANGED: Use stored token from callback instead of getResponse()
+                cfTurnstileToken = turnstileToken;
+                if (!cfTurnstileToken) {
+                    showError('Please complete the CAPTCHA challenge.');
+                    return;
+                }
+            }
+            errorMessage.classList.remove('show');
+            loginBtn.classList.add('loading');
+            loginBtn.disabled = true;
+            const btnText = loginBtn.textContent;
+            loginBtn.textContent = '';
+            try {
+                const response = await fetch('/api/admin-login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: pw, cfTurnstileToken })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    localStorage.setItem('adminAuth', result.token);
+                    loginBtn.textContent = 'Success! Redirecting...';
+                    setTimeout(() => { window.location.href = '/xsbhysdgftwdbqdsbfdspfbdshukds'; }, 500);
+                } else {
+                    showError(result.message || 'Invalid password');
+                    turnstileToken = '';  // NEW: Clear stored token
+                    if (turnstileWidgetId !== null && window.turnstile) turnstile.reset(turnstileWidgetId);
+                }
+            } catch (error) {
+                showError('Connection error. Please try again.');
+                turnstileToken = '';  // NEW: Clear stored token
+                if (turnstileWidgetId !== null && window.turnstile) turnstile.reset(turnstileWidgetId);
+            } finally {
+                if (!document.querySelector('.success')) {
+                    loginBtn.classList.remove('loading');
+                    loginBtn.disabled = false;
+                    loginBtn.textContent = btnText;
+                }
+            }
+        });
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('show');
+        }
+
+        pwInput.addEventListener('input', function() {
+            if (errorMessage.classList.contains('show')) errorMessage.classList.remove('show');
+        });
+
+        window.addEventListener('load', function() {
+            const t = localStorage.getItem('adminAuth');
+            if (t) {
+                fetch('/api/verify-admin', { headers: { 'Authorization': `Bearer ${t}` } })
+                .then(r => r.json())
+                .then(d => { if (d.success) window.location.href = '/xsbhysdgftwdbqdsbfdspfbdshukds'; else localStorage.removeItem('adminAuth'); })
+                .catch(() => { localStorage.removeItem('adminAuth'); });
+            }
+            pwInput.focus();
+            initTurnstile();
+        });
+    </script>
+</body>
+</html>

